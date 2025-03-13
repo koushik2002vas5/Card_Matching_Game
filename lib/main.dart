@@ -90,4 +90,56 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
       isBusy = false;
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('Card Matching Game'),
+        backgroundColor: Colors.grey[900],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Score: $score',
+                    style: const TextStyle(fontSize: 20, color: Colors.white)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: gridSize,
+              ),
+              itemCount: cards.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => flipCard(index),
+                  child: Card(
+                    color: cards[index].isFaceUp || cards[index].isMatched
+                        ? Colors.grey[800]
+                        : Colors.grey[900],
+                    child: Center(
+                      child: Text(
+                        cards[index].isFaceUp
+                            ? cards[index].front
+                            : cards[index].back,
+                        style: const TextStyle(
+                            fontSize: 30.0, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
