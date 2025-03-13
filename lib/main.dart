@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 void main() => runApp(const MyApp());
 
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Card Matching Game',
-      theme: ThemeData.dark(),
+      theme: ThemeData.dark(), // Dark theme
       home: const CardMatchingGame(),
     );
   }
@@ -40,25 +41,55 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
   late List<CardModel> cards;
   late List<int> selectedCards;
   late bool isBusy;
+  late Timer timer;
   int score = 0;
+  int timeElapsed = 0;
+
   final int gridSize = 4;
 
   @override
   void initState() {
     super.initState();
     initializeGame();
-    selectedCards = [];
-    isBusy = false;
+    startTimer();
   }
 
   void initializeGame() {
-    List<String> icons = ['🚗', '🚕', '🚌', '🚓', '🚑', '🚒', '🚜', '🚛'];
+    List<String> icons = [
+      '🚗',
+      '🚕',
+      '🚌',
+      '🚓',
+      '🚑',
+      '🚒',
+      '🚜',
+      '🚛',
+      '🚎',
+      '🚚',
+      '🏎️',
+      '🚀'
+    ];
+    int totalPairs = (gridSize * gridSize) ~/ 2;
+    if (icons.length < totalPairs) {
+      throw Exception('Not enough icons to populate the grid.');
+    }
     cards = [];
-    for (int i = 0; i < icons.length; i++) {
+    for (int i = 0; i < totalPairs; i++) {
       cards.add(CardModel(front: icons[i], back: '❓'));
       cards.add(CardModel(front: icons[i], back: '❓'));
     }
     cards.shuffle();
+    selectedCards = [];
+    isBusy = false;
+  }
+
+  void startTimer() {
+    timeElapsed = 0;
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      setState(() {
+        timeElapsed++;
+      });
+    });
   }
 
   Future<void> flipCard(int index) async {
@@ -89,6 +120,37 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
       selectedCards.clear();
       isBusy = false;
     }
+
+    if (cards.every((card) => card.isMatched)) {
+      timer.cancel();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Congratulations!'),
+            content: Text(
+                'You won the game in $timeElapsed seconds with a score of $score!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  resetGame();
+                },
+                child: const Text('Play Again'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void resetGame() {
+    setState(() {
+      initializeGame();
+      startTimer();
+      score = 0;
+    });
   }
 
   @override
@@ -107,6 +169,8 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Score: $score',
+                    style: const TextStyle(fontSize: 20, color: Colors.white)),
+                Text('Time: $timeElapsed s',
                     style: const TextStyle(fontSize: 20, color: Colors.white)),
               ],
             ),
@@ -141,5 +205,11 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
   }
 }
